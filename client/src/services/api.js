@@ -2,8 +2,8 @@ import axios from 'axios';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
-  // baseURL: 'http://localhost:5000/api',
+  // baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
+  baseURL: 'http://localhost:5000/api',
   withCredentials: true, // Important for cookies
   timeout: 10000,
 });
