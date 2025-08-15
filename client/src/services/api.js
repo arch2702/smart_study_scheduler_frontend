@@ -2,8 +2,7 @@ import axios from 'axios';
 
 // Create axios instance
 const api = axios.create({
-  // baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
-  baseURL: 'http://localhost:5000/api',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000/api',
   withCredentials: true, // Important for cookies
   timeout: 10000,
 });
@@ -27,10 +26,13 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid, redirect to login
+      // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Avoid redirect loop if already on login page
+      if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

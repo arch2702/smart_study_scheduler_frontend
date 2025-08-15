@@ -18,22 +18,25 @@ export const AuthProvider = ({ children }) => {
   // Check if user is already logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      const storedUser = localStorage.getItem('user');
-      
-      if (token && storedUser) {
-        try {
-          // Verify token is still valid
-          const response = await authAPI.getMe();
+      try {
+        // Always attempt to fetch current user. Works for cookie-based auth and token auth.
+        const response = await authAPI.getMe();
+        if (response?.data?.user) {
           setUser(response.data.user);
           localStorage.setItem('user', JSON.stringify(response.data.user));
-        } catch (error) {
-          // Token invalid, clear storage
+        } else {
+          // No user returned; ensure clean state
           localStorage.removeItem('token');
           localStorage.removeItem('user');
         }
+      } catch (error) {
+        // 401 or network error: clear any stale credentials
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     checkAuth();
