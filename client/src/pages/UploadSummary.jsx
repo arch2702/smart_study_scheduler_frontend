@@ -61,13 +61,34 @@ const UploadSummary = () => {
     }
   });
 
-  const handleFileSelect = (e) => {
+  const handleFileSelect = async (e) => {
     const file = e.target.files[0];
-    if (file && file.type === 'application/pdf') {
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setError('Please select a valid PDF file');
+      setSelectedFile(null);
+      return;
+    }
+
+    try {
+      // Lightweight page count via regex on raw PDF bytes
+      const arrayBuffer = await file.arrayBuffer();
+      const text = new TextDecoder('utf-8').decode(arrayBuffer);
+      // Count occurrences of "/Type /Page" but exclude "/Pages"
+      const matches = text.match(/\/Type\s*\/Page(?!s)/g) || [];
+      const pageCount = matches.length;
+
+      if (pageCount > 5) {
+        setError(`PDF is too long. Found ${pageCount} pages, but the maximum allowed is 5.`);
+        setSelectedFile(null);
+        return;
+      }
+
       setSelectedFile(file);
       setError('');
-    } else {
-      setError('Please select a valid PDF file');
+    } catch (err) {
+      setError('Could not read the PDF. Please try another file.');
       setSelectedFile(null);
     }
   };
@@ -190,7 +211,7 @@ const UploadSummary = () => {
                   />
                 </div>
                 <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
-                  PDF files only, max 10MB
+                  PDF files only, max 5 pages
                 </p>
                 {selectedFile && (
                   <p className="text-sm text-green-600 dark:text-green-400 mt-2">
