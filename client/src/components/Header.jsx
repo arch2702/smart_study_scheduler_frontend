@@ -2,6 +2,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import { SunIcon, MoonIcon, AcademicCapIcon } from '@heroicons/react/24/outline';
+import NotificationBell from './NotificationBell';
 
 
 const Header = () => {
@@ -66,6 +67,9 @@ const Header = () => {
                 <MoonIcon className="h-5 w-5" />
               )}
             </button>
+
+            {/* Notifications */}
+            <NotificationBell />
 
             {/* User Points */}
             <div className="hidden sm:flex items-center space-x-2 bg-yellow-100 dark:bg-yellow-900 px-3 py-2 rounded-lg">
