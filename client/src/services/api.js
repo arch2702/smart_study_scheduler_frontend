@@ -2,24 +2,16 @@ import axios from 'axios';
 
 // Create axios instance
 const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
-  // baseURL: 'http://localhost:5000/api',
+  // baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
+  baseURL: 'http://localhost:5000/api',
   withCredentials: true, // Important for cookies
   timeout: 10000,
 });
 
-// Request interceptor to add auth token
+// Request interceptor - no need to manually add token as we're using HTTP-only cookies
 api.interceptors.request.use(
-  (config) => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
-    return config;
-  },
-  (error) => {
-    return Promise.reject(error);
-  }
+  (config) => config,
+  (error) => Promise.reject(error)
 );
 
 // Response interceptor for error handling
@@ -27,10 +19,11 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid, redirect to login
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      window.location.href = '/login';
+      // Only redirect if we're not already on the login page
+      if (!window.location.pathname.includes('/login')) {
+        localStorage.removeItem('user');
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }
