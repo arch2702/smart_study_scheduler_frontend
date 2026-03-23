@@ -1,12 +1,48 @@
 import axios from 'axios';
 
-// Create axios instance
-const api = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
-  // baseURL: 'http://localhost:5000/api',
-  withCredentials: true, // Important for cookies
-  timeout: 10000,
-});
+// Create axios instance with retry logic
+const createApiInstance = () => {
+  // Create axios instance
+  const instance = axios.create({
+    baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
+    withCredentials: true, // Important for cookies
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+  });
+
+  // Ensure credentials are sent with every request
+  instance.defaults.withCredentials = true;
+
+  // Add retry logic for failed requests
+  instance.interceptors.response.use(
+    response => response,
+    async error => {
+      const originalRequest = error.config;
+      
+      // If error is not a 401 or we've already retried, reject
+      if (error.response?.status !== 401 || originalRequest._retry) {
+        return Promise.reject(error);
+      }
+
+      // Mark that we've retried this request
+      originalRequest._retry = true;
+      
+      try {
+        // Wait a bit before retrying
+        await new Promise(resolve => setTimeout(resolve, 300));
+        return instance(originalRequest);
+      } catch (retryError) {
+        return Promise.reject(retryError);
+      }
+    }
+  );
+
+  return instance;
+};
+
+const api = createApiInstance();
 
 // Request interceptor - no need to manually add token as we're using HTTP-only cookies
 api.interceptors.request.use(
