@@ -3,8 +3,9 @@ import axios from 'axios';
 // Create axios instance with retry logic
 const createApiInstance = () => {
   // Create axios instance
+  const backendUrl = import.meta.env.VITE_BACKEND_API_URL?.trim();
   const instance = axios.create({
-    baseURL: import.meta.env.VITE_BACKEND_API_URL || 'http://localhost:5000/api',
+    baseURL: backendUrl || 'http://localhost:5000/api',
     withCredentials: true, // Important for cookies
     timeout: 10000,
     headers: {
@@ -44,9 +45,11 @@ const createApiInstance = () => {
 
 const api = createApiInstance();
 
-// Request interceptor - no need to manually add token as we're using HTTP-only cookies
+// Request interceptor - no token needed, using httpOnly cookies
 api.interceptors.request.use(
-  (config) => config,
+  (config) => {
+    return config;
+  },
   (error) => Promise.reject(error)
 );
 

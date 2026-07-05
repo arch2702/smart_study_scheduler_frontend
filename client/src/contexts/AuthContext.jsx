@@ -18,18 +18,16 @@ export const AuthProvider = ({ children }) => {
   // Check if user is already logged in on mount
   useEffect(() => {
     const checkAuth = async () => {
-      const token = localStorage.getItem('token');
       const storedUser = localStorage.getItem('user');
       
-      if (token && storedUser) {
+      if (storedUser) {
         try {
-          // Verify token is still valid
+          // Verify session is still valid by calling backend
           const response = await authAPI.getMe();
           setUser(response.data.user);
           localStorage.setItem('user', JSON.stringify(response.data.user));
         } catch (error) {
-          // Token invalid, clear storage
-          localStorage.removeItem('token');
+          // Session invalid, clear storage
           localStorage.removeItem('user');
         }
       }
@@ -38,14 +36,12 @@ export const AuthProvider = ({ children }) => {
 
     checkAuth();
   }, []);
-
   const login = async (credentials) => {
     try {
       const response = await authAPI.login(credentials);
-      const { user: userData, token } = response.data;
+      const { user: userData } = response.data;
       
-      // Store in localStorage
-      localStorage.setItem('token', token);
+      // Store user data in localStorage (token is handled via httpOnly cookie)
       localStorage.setItem('user', JSON.stringify(userData));
       
       setUser(userData);
@@ -61,10 +57,9 @@ export const AuthProvider = ({ children }) => {
   const register = async (userData) => {
     try {
       const response = await authAPI.register(userData);
-      const { user: newUser, token } = response.data;
+      const { user: newUser } = response.data;
       
-      // Store in localStorage
-      localStorage.setItem('token', token);
+      // Store user data in localStorage (token is handled via httpOnly cookie)
       localStorage.setItem('user', JSON.stringify(newUser));
       
       setUser(newUser);
@@ -83,8 +78,7 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
-      // Clear storage and state
-      localStorage.removeItem('token');
+      // Clear storage and state (token is cleared via httpOnly cookie by backend)
       localStorage.removeItem('user');
       setUser(null);
     }
